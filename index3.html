@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EquiZen - Trade the Future</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+   <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <i class="fas fa-chart-line me-2"></i>EquiZen
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">Exchange</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">Markets</a>
+                    </li>
+                </ul>
+                <div class="d-flex align-items-center">
+                    <span id="apiStatus" class="api-status me-3 connecting">
+                        <i class="fas fa-circle me-1"></i>Connecting...
+                    </span>
+                    
+                    <!-- Auth Buttons (shown when logged out) -->
+                    <div id="authButtons" class="d-flex">
+                        <button class="btn btn-outline-light me-3" data-bs-toggle="modal" data-bs-target="#loginModal">
+                            <i class="fas fa-sign-in-alt me-2"></i>Log In
+                        </button>
+                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#signupModal">
+                            <i class="fas fa-user-plus me-2"></i>Sign Up
+                        </button>
+                    </div>
+                    
+                    <!-- User Info (shown when logged in) -->
+                    <div id="userSection" class="d-none">
+                        <div class="user-info d-flex align-items-center">
+                            <i class="fas fa-user-circle fs-4 me-2 text-primary"></i>
+                            <span id="userName" class="me-3 fw-medium">Welcome!</span>
+                            <button id="logoutBtn" class="btn btn-outline-danger btn-sm">
+                                <i class="fas fa-sign-out-alt me-1"></i>Logout
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Login Modal -->
+    <div class="modal fade auth-modal" id="loginModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title text-white">
+                        <i class="fas fa-sign-in-alt me-2"></i>Welcome Back
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <form id="loginForm">
+                        <div class="mb-3">
+                            <label for="loginEmail" class="form-label text-white">Email Address</label>
+                            <input type="email" class="form-control" id="loginEmail" required>
+                        </div>
+                        <div class="mb-4">
+                            <label for="loginPassword" class="form-label text-white">Password</label>
+                            <input type="password" class="form-control" id="loginPassword" required>
+                        </div>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-sign-in-alt me-2"></i>Sign In
+                            </button>
+                        </div>
+                        <div class="text-center mt-3">
+                            <small class="text-muted">Don't have an account? 
+                                <a href="#" class="text-primary" data-bs-dismiss="modal" data-bs-toggle="modal" data-bs-target="#signupModal">Sign up here</a>
+                            </small>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Signup Modal -->
+    <div class="modal fade auth-modal" id="signupModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title text-white">
+                        <i class="fas fa-user-plus me-2"></i>Create Account
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <form id="signupForm">
+                        <div class="mb-3">
+                            <label for="signupName" class="form-label text-white">Full Name</label>
+                            <input type="text" class="form-control" id="signupName" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="signupEmail" class="form-label text-white">Email Address</label>
+                            <input type="email" class="form-control" id="signupEmail" required>
+                        </div>
+                        <div class="mb-4">
+                            <label for="signupPassword" class="form-label text-white">Password</label>
+                            <input type="password" class="form-control" id="signupPassword" required>
+                        </div>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-user-plus me-2"></i>Create Account
+                            </button>
+                        </div>
+                        <div class="text-center mt-3">
+                            <small class="text-muted">Already have an account? 
+                                <a href="#" class="text-primary" data-bs-dismiss="modal" data-bs-toggle="modal" data-bs-target="#loginModal">Sign in here</a>
+                            </small>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hero Section -->
+    <section class="hero-section">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-lg-6">
+                    <h1 class="hero-title animate-on-scroll">Trade<br>the future</h1>
+                    <p class="hero-subtitle animate-on-scroll">Buy, sell, and trade stocks with confidence on the world's most trusted trading platform with real-time market data.</p>
+                    <div class="animate-on-scroll">
+                        <button class="btn btn-primary btn-lg me-3">Start Trading</button>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                   <div class="hero-video" style="width: 100%; border-radius: 0.5rem; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); overflow: hidden; aspect-ratio: 16/9;">
+                        <video 
+                            autoplay 
+                            muted 
+                            loop 
+                            playsinline 
+                            style="width: 100%; height: 100%; object-fit: cover; display: block;"
+                        >
+                            <source src="img/AdobeStock_410028008_Video_4K_Preview.mov" type="video/mp4">
+                            <!-- Fallback content here -->
+                        </video>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Market Overview -->
+    <section class="py-5">
+        <div class="container">
+             <div class="recurring-buy-card">
+            <div class="row align-items-center">
+                <div class="col-lg-5 col-md-6 mb-4 mb-md-0">
+                    <div class="phone-mockup mx-auto">
+                        <div class="phone-header">
+                            <img  src="https://eu-central-1-shared-euc1-02.graphassets.com/A1mBmyT7HRoyl6zGy70ZVz/output=format:webp/brg7LDCTpKvYTV5hSW0g" alt="Phone Header"  class="img-fluid ">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-lg-7 col-md-6">
+                    <div class="feature-item">
+                        <div class="feature-icon">
+                            <i class="fas fa-sync-alt"></i>
+                        </div>
+                        <div class="feature-content">
+                            <h5>Recurring Buy</h5>
+                            <p>Invest in crypto on a recurring schedule to eliminate the need to time the market.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="feature-item">
+                        <div class="feature-icon">
+                            <i class="fas fa-sliders-h"></i>
+                        </div>
+                        <div class="feature-content">
+                            <h5>Freedom to customize</h5>
+                            <p>Adjust purchase amount, modify frequency, or simply skip a transaction.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="feature-item">
+                        <div class="feature-icon">
+                            <i class="fas fa-chart-bar"></i>
+                        </div>
+                        <div class="feature-content">
+                            <h5>Dollar-Cost Averaging (DCA)</h5>
+                            <p>Benefit from the DCA effect to minimize the impact of market volatility.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        </div>
+    </section>
+
+    <!-- Statistics Section -->
+    <section class="stats-section">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-3">
+                    <div class="stat-card">
+                        <div class="stat-number">A+</div>
+                        <div class="stat-label">Trust Score</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-card">
+                        <div class="stat-number" id="statUsers">2M+</div>
+                        <div class="stat-label">Active Traders</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-card">
+                        <div class="stat-number" id="statVolume">$15B</div>
+                        <div class="stat-label">Daily Volume</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-card">
+                        <div class="stat-number" id="statStocks">500+</div>
+                        <div class="stat-label">Listed Stocks</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="py-5">
+        <div class="container">
+             <div class="recurring-buy-card">
+                <div class="row align-items-center">
+                    
+                    
+                    <div class="col-lg-7 col-md-6">
+                        <div class="feature-item">
+                            <div class="feature-icon">
+                                <i class="fas fa-sync-alt"></i>
+                            </div>
+                            <div class="feature-content">
+                                <h5>Intuitive mobile app</h5>
+                                <p>Download our mobile app to buy digital assets instantly from your phone. Manage your digital assets from your phone anytime, anywhere.</p>
+                            </div>
+                        </div>
+                        
+                        <div class="feature-item">
+                            <div class="feature-icon">
+                                <i class="fas fa-sliders-h"></i>
+                            </div>
+                            <div class="feature-content">
+                                <h5>Earn with Staking</h5>
+                                <p>Bitvavo enables you to earn passive returns on your crypto. Keep full access to your assets with Flex, or lock them up with Fixed to earn an even higher APY.</p>
+                            </div>
+                        </div>
+                        
+                        <div class="feature-item">
+                            <div class="feature-icon">
+                                <i class="fas fa-chart-bar"></i>
+                            </div>
+                            <div class="feature-content">
+                                <h5>Direct euro transfers</h5>
+                                <p>Buying digital assets with euros has never been easier. Bitvavo supports 8 payment methods, including SEPA for instant transfers.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-5 col-md-6 mb-4 mb-md-0">
+                        <div class="phone-mockup mx-auto">
+                            <div class="phone-header">
+                                <img  src="https://eu-central-1-shared-euc1-02.graphassets.com/A1mBmyT7HRoyl6zGy70ZVz/output=format:webp/cmb4zdf8wpqqq07w6vy8024li" alt="Phone Header"  class="img-fluid ">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features-section">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-mobile-alt"></i>
+                        </div>
+                        <h4>Real-time Data</h4>
+                        <p>Access live market data powered by MarketStack API with real-time price updates and market insights.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <h4>Advanced Analytics</h4>
+                        <p>Make informed decisions with comprehensive market analysis and historical data tracking.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-shield-alt"></i>
+                        </div>
+                        <h4>Secure Trading</h4>
+                        <p>Trade with confidence using our secure platform with industry-leading security measures.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pro Mode Section -->
+    <section class="pro-mode-section">
+        <div class="container">
+            <div class="text-center mb-5">
+                <h2 class="display-4 fw-bold mb-3">Pro Trading Dashboard</h2>
+                <p class="lead">Professional-grade interface with real market data</p>
+            </div>
+            <div class="pro-dashboard">
+                <div class="row">
+                    <div class="col-md-8">
+                        <div class="pro-dashboard-image">
+                            <img 
+                                class="img-fluid" 
+                                src="https://bitvavo.com/assets/pro/optimized/pro-panel-1-1366w.avif" 
+                                alt="Pro Trading Dashboard" 
+                                style="max-width: 1000px; height: auto;">
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="mt-4 mb-4  d-flex align-items-center justify-content-space-between">
+                        <div class="pro-dashboard-image">
+                            <h2 class="text-center ">USDC pairs with up to 0.05% fees</h2>
+                            <p class="text-center text-secondary ">USDC pairs at the lowest fees available, with many more to be added soon.</p>
+                        </div>
+                    
+                        <div class="pro-dashboard-image">
+                            <h2 class="text-center ">Professional-grade interface</h2>
+                            <p class="text-center text-secondary">Keyboard navigation, resizable modules, and chart-integrated order editing.</p>
+                        </div>
+                  
+                        <div class="pro-dashboard-image">
+                            <h2 class="text-center ">Built by traders</h2>
+                            <p class="text-center text-secondary">Built on continuous input from traders, evolving to serve you better.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="text-center mt-4">
+                    <button class="btn btn-primary btn-lg">Get Started</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Second Hero Section -->
+    <section class="hero-section">
+        <div class="bg-shapes">
+            <div class="shape"></div>
+            <div class="shape"></div>
+            <div class="shape"></div>
+        </div>
+
+        <div class="containers">
+            <h1 class="title">Take control of your portfolio</h1>
+            
+            <p class="description">
+                Join over <span class="highlight">1.5 million users</span> trading the future on EquiZen and enjoy our low fees and easy to use platform.
+            </p>
+            
+            <button class="cta-button" onclick="handleCreateAccount()">
+                Create new account
+                <span class="arrow">→</span>
+            </button>
+            
+            <div class="stats">
+                <div class="stat">
+                    <span class="stat-number">1.5M+</span>
+                    <span class="stat-label">Active Users</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-number">0.1%</span>
+                    <span class="stat-label">Low Fees</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-number">24/7</span>
+                    <span class="stat-label">Support</span>
+                </div>
+            </div>
+        </div>
+    </section>
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-3">
+                    <h5>EquiZen</h5>
+                    <ul class="list-unstyled">
+                        <li><a href="#" class="footer-links">About</a></li>
+                        <li><a href="#" class="footer-links">Careers</a></li>
+                        <li><a href="#" class="footer-links">Business</a></li>
+                        <li><a href="#" class="footer-links">Developers</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-3">
+                    <h5>Products</h5>
+                    <ul class="list-unstyled">
+                        <li><a href="#" class="footer-links">Exchange</a></li>
+                        <li><a href="#" class="footer-links">Academy</a></li>
+                        <li><a href="#" class="footer-links">Trust Wallet</a></li>
+                        <li><a href="#" class="footer-links">API</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-3">
+                    <h5>Support</h5>
+                    <ul class="list-unstyled">
+                        <li><a href="#" class="footer-links">Help Center</a></li>
+                        <li><a href="#" class="footer-links">Contact Us</a></li>
+                        <li><a href="#" class="footer-links">API Documentation</a></li>
+                        <li><a href="#" class="footer-links">Trading Rules</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-3">
+                    <h5>Legal</h5>
+                    <ul class="list-unstyled">
+                        <li><a href="#" class="footer-links">Terms of Use</a></li>
+                        <li><a href="#" class="footer-links">Privacy Policy</a></li>
+                        <li><a href="#" class="footer-links">Cookie Policy</a></li>
+                        <li><a href="#" class="footer-links">Risk Warning</a></li>
+                    </ul>
+                </div>
+            </div>
+            <hr class="my-4">
+            <div class="row">
+                <div class="col-md-6">
+                    <p class="text-white-50">&copy; 2025 EquiZen. All rights reserved. Powered by MarketStack API</p>
+                </div>
+                <div class="col-md-6 text-end">
+                    <div class="social-links">
+                        <a href="#" class="text-white-50 me-3"><i class="fab fa-twitter"></i></a>
+                        <a href="#" class="text-white-50 me-3"><i class="fab fa-telegram"></i></a>
+                        <a href="#" class="text-white-50 me-3"><i class="fab fa-reddit"></i></a>
+                        <a href="#" class="text-white-50"><i class="fab fa-discord"></i></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+<script src="script.js"></script>
+</body>
+</html>

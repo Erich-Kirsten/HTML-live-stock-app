@@ -1,0 +1,949 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>News & Stocks - MarketTracker Pro</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        :root {
+            --primary-color: #02c076;
+            --secondary-color: #1a1a1a;
+            --dark-bg: #0d1421;
+            --card-bg: #1e2329;
+            --text-light: #b7bdc6;
+            --border-color: #2b3139;
+            --success-color: #02c076;
+            --danger-color: #f6465d;
+            --text-primary: #ffffff;
+            --text-secondary: #b7bdc6;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, var(--dark-bg) 0%, #1a2332 100%);
+            min-height: 100vh;
+            color: var(--text-primary);
+        }
+
+        .navbar {
+            background: rgba(30, 35, 41, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border-color);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+        }
+
+        .navbar-brand {
+            font-weight: 700;
+            color: var(--primary-color) !important;
+            font-size: 1.5rem;
+        }
+
+        .nav-link {
+            color: var(--text-light) !important;
+            transition: color 0.3s ease;
+        }
+
+        .nav-link:hover {
+            color: var(--primary-color) !important;
+        }
+
+        .nav-link.active {
+            color: var(--primary-color) !important;
+        }
+
+        .container-fluid {
+            padding: 2rem 1rem;
+        }
+
+        .section-title {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            color: var(--text-primary);
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .news-card {
+            background: var(--card-bg);
+            border-radius: 15px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--border-color);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .news-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+            border-color: var(--primary-color);
+        }
+
+        .news-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 0.75rem;
+            line-height: 1.4;
+        }
+
+        .news-meta {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+
+        .news-source {
+            background: var(--primary-color);
+            color: var(--dark-bg);
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .news-summary {
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        .stocks-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .stock-card {
+            background: var(--card-bg);
+            border-radius: 15px;
+            padding: 1.5rem;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--border-color);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stock-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary-color), var(--success-color));
+        }
+
+        .stock-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+            border-color: var(--primary-color);
+        }
+
+        .stock-card.clickable {
+            border: 2px solid var(--primary-color);
+        }
+
+        .stock-card.clickable::after {
+            content: 'Click for details';
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            background: var(--primary-color);
+            color: var(--dark-bg);
+            padding: 0.25rem 0.5rem;
+            border-radius: 10px;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+
+        .stock-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .stock-symbol {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .stock-company {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin-top: 0.25rem;
+        }
+
+        .stock-price {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+        }
+
+        .stock-change {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: 600;
+        }
+
+        .change-positive {
+            color: var(--success-color);
+        }
+
+        .change-negative {
+            color: var(--danger-color);
+        }
+
+        .stock-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .detail-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .detail-label {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .detail-value {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .market-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: var(--card-bg);
+            padding: 0.75rem 1.5rem;
+            border-radius: 25px;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--success-color);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .trending-indicator {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: rgba(30, 35, 41, 0.9);
+            border: 1px solid var(--border-color);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+
+        .refresh-btn {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: var(--primary-color);
+            color: var(--dark-bg);
+            border: none;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            font-size: 1.5rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+            z-index: 1000;
+            font-weight: 600;
+        }
+
+        .refresh-btn:hover {
+            transform: scale(1.1);
+            background: #00a865;
+            box-shadow: 0 8px 20px rgba(2, 192, 118, 0.3);
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid var(--border-color);
+            border-top: 3px solid var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 768px) {
+            .stocks-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .container-fluid {
+                padding: 1rem 0.5rem;
+            }
+            
+            .section-title {
+                font-size: 1.5rem;
+                text-align: center;
+            }
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--dark-bg);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--primary-color);
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg">
+        <div class="container">
+            <a class="navbar-brand" href="/index.html">
+                <i class="fas fa-chart-line me-2"></i>EquiZen
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/index.html">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/News&Stocks.html">News & Stocks</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/Portfolio.html">Portfolio</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/ProVersion.html">Pro Version</a>
+                    </li>
+                </ul>
+                <div class="d-flex align-items-center">
+                    
+                    <!-- Auth Buttons (shown when logged out) -->
+                    <div id="authButtons" class="d-flex">
+                        <button class="btn btn-outline-light me-3" data-bs-toggle="modal" data-bs-target="#loginModal">
+                            <i class="fas fa-sign-in-alt me-2"></i>Log In
+                        </button>
+                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#signupModal">
+                            <i class="fas fa-user-plus me-2"></i>Sign Up
+                        </button>
+                    </div>
+                    
+                    <!-- User Info (shown when logged in) -->
+                    <div id="userSection" class="d-none">
+                        <div class="user-info d-flex align-items-center">
+                            
+                            <span id="apiStatus" class="api-status me-3 connecting">
+                        <a class="nav-link" href="/index-2.html">TradingView</a>
+                    </span>
+                            <i class="fas fa-user-circle fs-4 me-2 text-primary"></i>
+                            <span id="userName" class="me-3 fw-medium">Welcome!</span>
+                            <button id="logoutBtn" class="btn btn-outline-danger btn-sm">
+                                <i class="fas fa-sign-out-alt me-1"></i>Logout
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+
+    
+    <!-- Login Modal -->
+    <div class="modal fade auth-modal" id="loginModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title text-white">
+                        <i class="fas fa-sign-in-alt me-2"></i>Welcome Back
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <form id="loginForm">
+                        <div class="mb-3">
+                            <label for="loginEmail" class="form-label text-white">Email Address</label>
+                            <input type="email" class="form-control" id="loginEmail" required>
+                        </div>
+                        <div class="mb-4">
+                            <label for="loginPassword" class="form-label text-white">Password</label>
+                            <input type="password" class="form-control" id="loginPassword" required>
+                        </div>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-sign-in-alt me-2"></i>Sign In
+                            </button>
+                        </div>
+                        <div class="text-center mt-3">
+                            <small class="text-muted">Don't have an account? 
+                                <a href="#" class="text-primary" data-bs-dismiss="modal" data-bs-toggle="modal" data-bs-target="#signupModal">Sign up here</a>
+                            </small>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Signup Modal -->
+    <div class="modal fade auth-modal" id="signupModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title text-white">
+                        <i class="fas fa-user-plus me-2"></i>Create Account
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <form id="signupForm">
+                        <div class="mb-3">
+                            <label for="signupName" class="form-label text-white">Full Name</label>
+                            <input type="text" class="form-control" id="signupName" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="signupEmail" class="form-label text-white">Email Address</label>
+                            <input type="email" class="form-control" id="signupEmail" required>
+                        </div>
+                        <div class="mb-4">
+                            <label for="signupPassword" class="form-label text-white">Password</label>
+                            <input type="password" class="form-control" id="signupPassword" required>
+                        </div>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-user-plus me-2"></i>Create Account
+                            </button>
+                        </div>
+                        <div class="text-center mt-3">
+                            <small class="text-muted">Already have an account? 
+                                <a href="#" class="text-primary" data-bs-dismiss="modal" data-bs-toggle="modal" data-bs-target="#loginModal">Sign in here</a>
+                            </small>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container-fluid">
+        <div class="market-status">
+            <div class="status-dot"></div>
+            <span><strong>Market Open</strong> - NYSE, NASDAQ actively trading</span>
+        </div>
+
+        <!-- Financial News Section -->
+        <div class="row">
+            <div class="col-lg-6">
+                <h2 class="section-title">
+                    <i class="fas fa-newspaper"></i> Latest Financial News
+                </h2>
+                
+                <div class="news-card">
+                    <div class="news-title">Federal Reserve Signals Potential Rate Adjustments Amid Economic Recovery</div>
+                    <div class="news-meta">
+                        <span class="news-source">Reuters</span>
+                        <span><i class="fas fa-clock"></i> 2 hours ago</span>
+                        <span><i class="fas fa-eye"></i> 15.2K views</span>
+                    </div>
+                    <div class="news-summary">
+                        The Federal Reserve indicated today that it may consider adjusting interest rates in response to recent economic indicators showing strong employment growth and stable inflation metrics...
+                    </div>
+                </div>
+
+                <div class="news-card">
+                    <div class="news-title">Tech Giants Report Strong Q2 Earnings Despite Market Volatility</div>
+                    <div class="news-meta">
+                        <span class="news-source">Bloomberg</span>
+                        <span><i class="fas fa-clock"></i> 4 hours ago</span>
+                        <span><i class="fas fa-eye"></i> 12.8K views</span>
+                    </div>
+                    <div class="news-summary">
+                        Major technology companies exceeded analyst expectations this quarter, with cloud computing and AI investments driving revenue growth across the sector...
+                    </div>
+                </div>
+
+                <div class="news-card">
+                    <div class="news-title">Oil Prices Surge Following OPEC+ Production Decision</div>
+                    <div class="news-meta">
+                        <span class="news-source">MarketWatch</span>
+                        <span><i class="fas fa-clock"></i> 6 hours ago</span>
+                        <span><i class="fas fa-eye"></i> 9.4K views</span>
+                    </div>
+                    <div class="news-summary">
+                        Crude oil futures jumped 3.2% after OPEC+ announced production cuts, affecting energy sector stocks and raising concerns about inflation pressures...
+                    </div>
+                </div>
+
+                <div class="news-card">
+                    <div class="news-title">Cryptocurrency Market Stabilizes After Recent Regulatory Clarity</div>
+                    <div class="news-meta">
+                        <span class="news-source">CoinDesk</span>
+                        <span><i class="fas fa-clock"></i> 8 hours ago</span>
+                        <span><i class="fas fa-eye"></i> 7.1K views</span>
+                    </div>
+                    <div class="news-summary">
+                        Digital assets showed signs of stabilization following new regulatory guidelines, with Bitcoin and Ethereum posting modest gains in early trading...
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stock Prices Section -->
+            <div class="col-lg-6">
+                <h2 class="section-title">
+                    <i class="fas fa-chart-line"></i> Live Stock Prices
+                </h2>
+
+                <div class="stocks-grid">
+                    <!-- Clickable Stock 1 -->
+                    <div class="stock-card clickable" onclick="goToStockDetail('AAPL')">
+                        <div class="trending-indicator change-positive">
+                            <i class="fas fa-arrow-up"></i>
+                        </div>
+                        <div class="stock-header">
+                            <div>
+                                <div class="stock-symbol">AAPL</div>
+                                <div class="stock-company">Apple Inc.</div>
+                            </div>
+                        </div>
+                        <div class="stock-price">$189.45</div>
+                        <div class="stock-change change-positive">
+                            <i class="fas fa-arrow-up"></i>
+                            <span>+$2.34 (+1.25%)</span>
+                        </div>
+                        <div class="stock-details">
+                            <div class="detail-item">
+                                <div class="detail-label">Open</div>
+                                <div class="detail-value">$187.11</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">Volume</div>
+                                <div class="detail-value">45.2M</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">High</div>
+                                <div class="detail-value">$190.23</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">Low</div>
+                                <div class="detail-value">$186.78</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Clickable Stock 2 -->
+                    <div class="stock-card clickable" onclick="goToStockDetail('GOOGL')">
+                        <div class="trending-indicator change-positive">
+                            <i class="fas fa-arrow-up"></i>
+                        </div>
+                        <div class="stock-header">
+                            <div>
+                                <div class="stock-symbol">GOOGL</div>
+                                <div class="stock-company">Alphabet Inc.</div>
+                            </div>
+                        </div>
+                        <div class="stock-price">$142.67</div>
+                        <div class="stock-change change-positive">
+                            <i class="fas fa-arrow-up"></i>
+                            <span>+$1.89 (+1.34%)</span>
+                        </div>
+                        <div class="stock-details">
+                            <div class="detail-item">
+                                <div class="detail-label">Open</div>
+                                <div class="detail-value">$140.78</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">Volume</div>
+                                <div class="detail-value">28.7M</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">High</div>
+                                <div class="detail-value">$143.21</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">Low</div>
+                                <div class="detail-value">$140.12</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Regular Stock 3 -->
+                    <div class="stock-card">
+                        <div class="trending-indicator change-negative">
+                            <i class="fas fa-arrow-down"></i>
+                        </div>
+                        <div class="stock-header">
+                            <div>
+                                <div class="stock-symbol">TSLA</div>
+                                <div class="stock-company">Tesla Inc.</div>
+                            </div>
+                        </div>
+                        <div class="stock-price">$268.92</div>
+                        <div class="stock-change change-negative">
+                            <i class="fas fa-arrow-down"></i>
+                            <span>-$3.45 (-1.27%)</span>
+                        </div>
+                        <div class="stock-details">
+                            <div class="detail-item">
+                                <div class="detail-label">Open</div>
+                                <div class="detail-value">$272.37</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">Volume</div>
+                                <div class="detail-value">52.1M</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">High</div>
+                                <div class="detail-value">$274.89</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">Low</div>
+                                <div class="detail-value">$267.45</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Regular Stock 4 -->
+                    <div class="stock-card">
+                        <div class="trending-indicator change-positive">
+                            <i class="fas fa-arrow-up"></i>
+                        </div>
+                        <div class="stock-header">
+                            <div>
+                                <div class="stock-symbol">MSFT</div>
+                                <div class="stock-company">Microsoft Corp.</div>
+                            </div>
+                        </div>
+                        <div class="stock-price">$423.18</div>
+                        <div class="stock-change change-positive">
+                            <i class="fas fa-arrow-up"></i>
+                            <span>+$5.67 (+1.36%)</span>
+                        </div>
+                        <div class="stock-details">
+                            <div class="detail-item">
+                                <div class="detail-label">Open</div>
+                                <div class="detail-value">$417.51</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">Volume</div>
+                                <div class="detail-value">32.4M</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">High</div>
+                                <div class="detail-value">$424.92</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">Low</div>
+                                <div class="detail-value">$416.78</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Regular Stock 5 -->
+                    <div class="stock-card">
+                        <div class="trending-indicator change-negative">
+                            <i class="fas fa-arrow-down"></i>
+                        </div>
+                        <div class="stock-header">
+                            <div>
+                                <div class="stock-symbol">AMZN</div>
+                                <div class="stock-company">Amazon.com Inc.</div>
+                            </div>
+                        </div>
+                        <div class="stock-price">$145.23</div>
+                        <div class="stock-change change-negative">
+                            <i class="fas fa-arrow-down"></i>
+                            <span>-$1.12 (-0.76%)</span>
+                        </div>
+                        <div class="stock-details">
+                            <div class="detail-item">
+                                <div class="detail-label">Open</div>
+                                <div class="detail-value">$146.35</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">Volume</div>
+                                <div class="detail-value">38.9M</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">High</div>
+                                <div class="detail-value">$147.89</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">Low</div>
+                                <div class="detail-value">$144.67</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Regular Stock 6 -->
+                    <div class="stock-card">
+                        <div class="trending-indicator change-positive">
+                            <i class="fas fa-arrow-up"></i>
+                        </div>
+                        <div class="stock-header">
+                            <div>
+                                <div class="stock-symbol">NVDA</div>
+                                <div class="stock-company">NVIDIA Corp.</div>
+                            </div>
+                        </div>
+                        <div class="stock-price">$891.34</div>
+                        <div class="stock-change change-positive">
+                            <i class="fas fa-arrow-up"></i>
+                            <span>+$12.45 (+1.42%)</span>
+                        </div>
+                        <div class="stock-details">
+                            <div class="detail-item">
+                                <div class="detail-label">Open</div>
+                                <div class="detail-value">$878.89</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">Volume</div>
+                                <div class="detail-value">41.2M</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">High</div>
+                                <div class="detail-value">$895.67</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">Low</div>
+                                <div class="detail-value">$876.12</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Refresh Button -->
+    <button class="refresh-btn" onclick="refreshData()" title="Refresh Data">
+        <i class="fas fa-sync-alt"></i>
+    </button>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-3">
+                    <h5>EquiZen</h5>
+                    <ul class="list-unstyled">
+                        <li><a href="#" class="footer-links">About</a></li>
+                        <li><a href="#" class="footer-links">Careers</a></li>
+                        <li><a href="#" class="footer-links">Business</a></li>
+                        <li><a href="#" class="footer-links">Developers</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-3">
+                    <h5>Products</h5>
+                    <ul class="list-unstyled">
+                        <li><a href="#" class="footer-links">Exchange</a></li>
+                        <li><a href="#" class="footer-links">Academy</a></li>
+                        <li><a href="#" class="footer-links">Trust Wallet</a></li>
+                        <li><a href="#" class="footer-links">API</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-3">
+                    <h5>Support</h5>
+                    <ul class="list-unstyled">
+                        <li><a href="#" class="footer-links">Help Center</a></li>
+                        <li><a href="#" class="footer-links">Contact Us</a></li>
+                        <li><a href="#" class="footer-links">API Documentation</a></li>
+                        <li><a href="#" class="footer-links">Trading Rules</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-3">
+                    <h5>Legal</h5>
+                    <ul class="list-unstyled">
+                        <li><a href="#" class="footer-links">Terms of Use</a></li>
+                        <li><a href="#" class="footer-links">Privacy Policy</a></li>
+                        <li><a href="#" class="footer-links">Cookie Policy</a></li>
+                        <li><a href="#" class="footer-links">Risk Warning</a></li>
+                    </ul>
+                </div>
+            </div>
+            <hr class="my-4">
+            <div class="row">
+                <div class="col-md-6">
+                    <p class="text-white-50">&copy; 2025 EquiZen. All rights reserved. Powered by MarketStack API</p>
+                </div>
+                <div class="col-md-6 text-end">
+                    <div class="social-links">
+                        <a href="#" class="text-white-50 me-3"><i class="fab fa-twitter"></i></a>
+                        <a href="#" class="text-white-50 me-3"><i class="fab fa-telegram"></i></a>
+                        <a href="#" class="text-white-50 me-3"><i class="fab fa-reddit"></i></a>
+                        <a href="#" class="text-white-50"><i class="fab fa-discord"></i></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Simulate real-time price updates
+        function updateStockPrices() {
+            const stockCards = document.querySelectorAll('.stock-card');
+            
+            stockCards.forEach(card => {
+                const priceElement = card.querySelector('.stock-price');
+                const changeElement = card.querySelector('.stock-change span');
+                const trendingIndicator = card.querySelector('.trending-indicator');
+                
+                if (priceElement && changeElement) {
+                    const currentPrice = parseFloat(priceElement.textContent.replace('$', ''));
+                    const randomChange = (Math.random() - 0.5) * 2; // Random change between -1 and +1
+                    const newPrice = currentPrice + randomChange;
+                    const changePercent = ((randomChange / currentPrice) * 100).toFixed(2);
+                    
+                    priceElement.textContent = `$${newPrice.toFixed(2)}`;
+                    
+                    if (randomChange > 0) {
+                        changeElement.innerHTML = `+$${Math.abs(randomChange).toFixed(2)} (+${Math.abs(changePercent)}%)`;
+                        changeElement.parentElement.className = 'stock-change change-positive';
+                        trendingIndicator.className = 'trending-indicator change-positive';
+                        trendingIndicator.innerHTML = '<i class="fas fa-arrow-up"></i>';
+                    } else {
+                        changeElement.innerHTML = `-$${Math.abs(randomChange).toFixed(2)} (-${Math.abs(changePercent)}%)`;
+                        changeElement.parentElement.className = 'stock-change change-negative';
+                        trendingIndicator.className = 'trending-indicator change-negative';
+                        trendingIndicator.innerHTML = '<i class="fas fa-arrow-down"></i>';
+                    }
+                }
+            });
+        }
+
+        // Function to navigate to detailed stock page
+        function goToStockDetail(symbol) {
+            // In a real application, this would navigate to the detailed stock page
+            alert(`Navigating to detailed view for ${symbol}...\n\nThis would normally take you to a detailed stock page with charts, news, and comprehensive data.`);
+            
+            // Simulate navigation with a small delay
+            setTimeout(() => {
+                console.log(`Would navigate to: /stock-detail/${symbol}`);
+                // window.location.href = `/stock-detail/${symbol}`;
+            }, 500);
+        }
+
+        // Refresh data function
+        function refreshData() {
+            const refreshBtn = document.querySelector('.refresh-btn i');
+            refreshBtn.style.animation = 'spin 1s linear infinite';
+            
+            // Simulate data refresh
+            setTimeout(() => {
+                updateStockPrices();
+                refreshBtn.style.animation = '';
+                
+                // Show a subtle notification
+                const notification = document.createElement('div');
+                notification.innerHTML = '<i class="fas fa-check"></i> Data updated';
+                notification.style.cssText = `
+                    position: fixed;
+                    top: 20px;
+                    right: 20px;
+                    background: var(--success-color);
+                    color: var(--dark-bg);
+                    padding: 1rem 1.5rem;
+                    border-radius: 10px;
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+                    z-index: 1001;
+                    animation: slideIn 0.3s ease;
+                    font-weight: 600;
+                `;
+                document.body.appendChild(notification);
+                
+                setTimeout(() => {
+                    notification.remove();
+                }, 2000);
+            }, 1000);
+        }
+
+        // Add CSS animation for notification
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideIn {
+                from { transform: translateX(100%); opacity: 0; }
+                to { transform: translateX(0); opacity: 1; }
+            }
+        `;
+        document.head.appendChild(style);
+
+        // Auto-update prices every 30 seconds
+        setInterval(updateStockPrices, 30000);
+
+        // Add click effects to news cards
+        document.querySelectorAll('.news-card').forEach(card => {
+            card.addEventListener('click', function() {
+                this.style.transform = 'scale(0.98)';
+                setTimeout(() => {
+                    this.style.transform = '';
+                }, 150);
+            });
+        });
+
+        // Initialize with a small random update on page load
+        setTimeout(updateStockPrices, 2000);
+    </script>
+</body>
+</html>

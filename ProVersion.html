@@ -1,0 +1,1254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TradingView Dashboard - Live Data</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        :root {
+            --primary-color: #02c076;
+            --secondary-color: #1a1a1a;
+            --dark-bg: #0d1421;
+            --card-bg: #1e2329;
+            --text-light: #b7bdc6;
+            --border-color: #2b3139;
+            --red-color: #f23645;
+            --green-color: #02c076;
+            --warning-color: #ffa726;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(135deg, var(--dark-bg) 0%, #1a2332 100%);
+            color: white;
+            min-height: 100vh;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            overflow-x: hidden;
+        }
+
+        .navbar {
+            background: rgba(13, 20, 33, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .navbar-brand {
+            font-weight: 700;
+            font-size: 1.5rem;
+            color: var(--primary-color) !important;
+        }
+
+        .nav-link {
+            color: var(--text-light) !important;
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+
+        .nav-link:hover {
+            color: var(--primary-color) !important;
+        }
+
+        .api-status {
+            font-size: 0.875rem;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            border: 1px solid;
+        }
+
+        .api-status.connecting {
+            color: #ffc107;
+            border-color: #ffc107;
+            background: rgba(255, 193, 7, 0.1);
+        }
+
+        .api-status.connected {
+            color: var(--primary-color);
+            border-color: var(--primary-color);
+            background: rgba(2, 192, 118, 0.1);
+        }
+
+        .api-status.api-error {
+            color: #dc3545;
+            border-color: #dc3545;
+            background: rgba(220, 53, 69, 0.1);
+        }
+
+        .main-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 2rem;
+        }
+
+        .left-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        .market-summary {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 1.5rem;
+            border: 1px solid var(--border-color);
+        }
+
+        .market-summary h2 {
+            margin-bottom: 1rem;
+            color: white;
+            font-size: 1.3rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .last-update {
+            font-size: 0.8rem;
+            color: var(--text-light);
+            font-weight: normal;
+        }
+
+        .market-tabs {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .tab {
+            padding: 0.5rem 1rem;
+            background: transparent;
+            border: none;
+            color: var(--text-light);
+            cursor: pointer;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .tab.active {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .tab:hover:not(.active) {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .market-indices {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .index-card {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 1.2rem;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .index-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--primary-color);
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
+        }
+
+        .index-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+        }
+
+        .index-card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .index-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 0.75rem;
+        }
+
+        .index-name {
+            font-size: 0.9rem;
+            color: var(--text-light);
+            font-weight: 500;
+        }
+
+        .index-symbol {
+            font-size: 0.8rem;
+            color: var(--text-light);
+            opacity: 0.7;
+        }
+
+        .index-value {
+            font-size: 1.4rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+            color: white;
+        }
+
+        .index-change {
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+            font-weight: 500;
+        }
+
+        .positive {
+            color: var(--green-color);
+        }
+
+        .negative {
+            color: var(--red-color);
+        }
+
+        .loading {
+            color: var(--text-light);
+            opacity: 0.7;
+        }
+
+        .right-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        .watchlist, .news-section, .volume-section {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 1.5rem;
+            border: 1px solid var(--border-color);
+        }
+
+        .watchlist h3, .news-section h3, .volume-section h3 {
+            margin-bottom: 1rem;
+            color: white;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .stock-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid var(--border-color);
+            transition: all 0.3s ease;
+        }
+
+        .stock-item:last-child {
+            border-bottom: none;
+        }
+
+        .stock-item:hover {
+            background: rgba(255, 255, 255, 0.02);
+            margin: 0 -0.5rem;
+            padding-left: 0.5rem;
+            padding-right: 0.5rem;
+            border-radius: 6px;
+        }
+
+        .stock-info {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .stock-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        .stock-symbol {
+            font-weight: bold;
+            color: white;
+        }
+
+        .stock-name {
+            font-size: 0.8rem;
+            color: var(--text-light);
+        }
+
+        .stock-price {
+            text-align: right;
+        }
+
+        .price {
+            font-weight: bold;
+            margin-bottom: 0.25rem;
+            color: white;
+        }
+
+        .change {
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .news-item {
+            display: flex;
+            gap: 1rem;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid var(--border-color);
+            transition: all 0.3s ease;
+        }
+
+        .news-item:last-child {
+            border-bottom: none;
+        }
+
+        .news-item:hover {
+            background: rgba(255, 255, 255, 0.02);
+            margin: 0 -0.5rem;
+            padding-left: 0.5rem;
+            padding-right: 0.5rem;
+            border-radius: 6px;
+        }
+
+        .news-icon {
+            width: 40px;
+            height: 40px;
+            background: var(--primary-color);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .news-content {
+            flex: 1;
+        }
+
+        .news-title {
+            font-size: 0.9rem;
+            color: white;
+            margin-bottom: 0.25rem;
+            line-height: 1.3;
+        }
+
+        .news-time {
+            font-size: 0.8rem;
+            color: var(--text-light);
+        }
+
+        .volume-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .volume-item:last-child {
+            border-bottom: none;
+        }
+
+        .volume-bar {
+            width: 80px;
+            height: 6px;
+            background: var(--border-color);
+            border-radius: 3px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .volume-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary-color), #028a5f);
+            border-radius: 3px;
+            transition: width 1s ease-in-out;
+        }
+
+        .error-message {
+            background: rgba(242, 54, 69, 0.1);
+            border: 1px solid var(--red-color);
+            border-radius: 8px;
+            padding: 1rem;
+            text-align: center;
+            color: var(--red-color);
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--border-color);
+            border-radius: 50%;
+            border-top-color: var(--primary-color);
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .refresh-btn {
+            background: none;
+            border: none;
+            color: var(--text-light);
+            cursor: pointer;
+            padding: 0.25rem;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+        }
+
+        .refresh-btn:hover {
+            color: var(--primary-color);
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .refresh-btn.spinning {
+            animation: spin 1s linear infinite;
+        }
+
+        @media (max-width: 1024px) {
+            .main-container {
+                grid-template-columns: 1fr;
+                padding: 1rem;
+            }
+            
+            .market-indices {
+                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            }
+
+            .market-tabs {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                gap: 1rem;
+            }
+            
+            .search-bar {
+                margin: 0;
+                max-width: none;
+            }
+
+            .market-indices {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+   
+        <nav class="navbar navbar-expand-lg">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <i class="fas fa-chart-line me-2"></i>EquiZen
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/index.html">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/News&Stocks.html">News & Stocks</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/Portfolio.html">Portfolio</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/ProVersion.html">Pro Version</a>
+                    </li>
+                </ul>
+                <div class="d-flex align-items-center">
+                    
+                    <!-- Auth Buttons (shown when logged out) -->
+                    <div id="authButtons" class="d-flex">
+                        <button class="btn btn-outline-light me-3" data-bs-toggle="modal" data-bs-target="#loginModal">
+                            <i class="fas fa-sign-in-alt me-2"></i>Log In
+                        </button>
+                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#signupModal">
+                            <i class="fas fa-user-plus me-2"></i>Sign Up
+                        </button>
+                    </div>
+                    
+                    <!-- User Info (shown when logged in) -->
+                    <div id="userSection" class="d-none">
+                        <div class="user-info d-flex align-items-center">
+                            
+                            <span id="apiStatus" class="api-status me-3 connecting">
+                        <a class="nav-link" href="/index-2.html">TradingView</a>
+                    </span>
+                            <i class="fas fa-user-circle fs-4 me-2 text-primary"></i>
+                            <span id="userName" class="me-3 fw-medium">Welcome!</span>
+                            <button id="logoutBtn" class="btn btn-outline-danger btn-sm">
+                                <i class="fas fa-sign-out-alt me-1"></i>Logout
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+
+    
+    <!-- Login Modal -->
+    <div class="modal fade auth-modal" id="loginModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title text-white">
+                        <i class="fas fa-sign-in-alt me-2"></i>Welcome Back
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <form id="loginForm">
+                        <div class="mb-3">
+                            <label for="loginEmail" class="form-label text-white">Email Address</label>
+                            <input type="email" class="form-control" id="loginEmail" required>
+                        </div>
+                        <div class="mb-4">
+                            <label for="loginPassword" class="form-label text-white">Password</label>
+                            <input type="password" class="form-control" id="loginPassword" required>
+                        </div>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-sign-in-alt me-2"></i>Sign In
+                            </button>
+                        </div>
+                        <div class="text-center mt-3">
+                            <small class="text-muted">Don't have an account? 
+                                <a href="#" class="text-primary" data-bs-dismiss="modal" data-bs-toggle="modal" data-bs-target="#signupModal">Sign up here</a>
+                            </small>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Signup Modal -->
+    <div class="modal fade auth-modal" id="signupModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title text-white">
+                        <i class="fas fa-user-plus me-2"></i>Create Account
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <form id="signupForm">
+                        <div class="mb-3">
+                            <label for="signupName" class="form-label text-white">Full Name</label>
+                            <input type="text" class="form-control" id="signupName" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="signupEmail" class="form-label text-white">Email Address</label>
+                            <input type="email" class="form-control" id="signupEmail" required>
+                        </div>
+                        <div class="mb-4">
+                            <label for="signupPassword" class="form-label text-white">Password</label>
+                            <input type="password" class="form-control" id="signupPassword" required>
+                        </div>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-user-plus me-2"></i>Create Account
+                            </button>
+                        </div>
+                        <div class="text-center mt-3">
+                            <small class="text-muted">Already have an account? 
+                                <a href="#" class="text-primary" data-bs-dismiss="modal" data-bs-toggle="modal" data-bs-target="#loginModal">Sign in here</a>
+                            </small>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+  
+
+    <div class="main-container">
+        <div class="left-panel">
+            <div class="market-summary">
+                <h2>
+                    Market Summary
+                    <span class="last-update">
+                        Last updated: <span id="lastUpdate">--:--</span>
+                        <button class="refresh-btn" id="refreshBtn" onclick="refreshData()">
+                            <i class="fas fa-sync-alt"></i>
+                        </button>
+                    </span>
+                </h2>
+                <div class="market-tabs">
+                    <button class="tab active" data-category="stocks">Stocks</button>
+                    <button class="tab" data-category="crypto">Crypto</button>
+                    <button class="tab" data-category="forex">Forex</button>
+                    <button class="tab" data-category="indices">Indices</button>
+                </div>
+                
+                <div class="market-indices" id="marketData">
+                    <div class="index-card">
+                        <div class="loading-spinner"></div>
+                        Loading market data...
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="right-panel">
+            <div class="watchlist">
+                <h3>
+                    <i class="fas fa-eye"></i>
+                    Watchlist
+                </h3>
+                <div id="watchlistData">
+                    <div class="stock-item">
+                        <div class="loading-spinner"></div>
+                        Loading watchlist...
+                    </div>
+                </div>
+            </div>
+
+            <div class="news-section">
+                <h3>
+                    <i class="fas fa-newspaper"></i>
+                    Market News
+                </h3>
+                <div id="newsData">
+                    <div class="news-item">
+                        <div class="news-icon">
+                            <div class="loading-spinner"></div>
+                        </div>
+                        <div class="news-content">
+                            <div class="news-title">Loading latest news...</div>
+                            <div class="news-time">Please wait</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="volume-section">
+                <h3>
+                    <i class="fas fa-chart-bar"></i>
+                    Top Volume
+                </h3>
+                <div id="volumeData">
+                    <div class="volume-item">
+                        <div>
+                            <div class="stock-symbol">Loading...</div>
+                            <div class="stock-name">--</div>
+                        </div>
+                        <div class="volume-bar">
+                            <div class="volume-fill" style="width: 0%;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-3">
+                    <h5>EquiZen</h5>
+                    <ul class="list-unstyled">
+                        <li><a href="#" class="footer-links">About</a></li>
+                        <li><a href="#" class="footer-links">Careers</a></li>
+                        <li><a href="#" class="footer-links">Business</a></li>
+                        <li><a href="#" class="footer-links">Developers</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-3">
+                    <h5>Products</h5>
+                    <ul class="list-unstyled">
+                        <li><a href="#" class="footer-links">Exchange</a></li>
+                        <li><a href="#" class="footer-links">Academy</a></li>
+                        <li><a href="#" class="footer-links">Trust Wallet</a></li>
+                        <li><a href="#" class="footer-links">API</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-3">
+                    <h5>Support</h5>
+                    <ul class="list-unstyled">
+                        <li><a href="#" class="footer-links">Help Center</a></li>
+                        <li><a href="#" class="footer-links">Contact Us</a></li>
+                        <li><a href="#" class="footer-links">API Documentation</a></li>
+                        <li><a href="#" class="footer-links">Trading Rules</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-3">
+                    <h5>Legal</h5>
+                    <ul class="list-unstyled">
+                        <li><a href="#" class="footer-links">Terms of Use</a></li>
+                        <li><a href="#" class="footer-links">Privacy Policy</a></li>
+                        <li><a href="#" class="footer-links">Cookie Policy</a></li>
+                        <li><a href="#" class="footer-links">Risk Warning</a></li>
+                    </ul>
+                </div>
+            </div>
+            <hr class="my-4">
+            <div class="row">
+                <div class="col-md-6">
+                    <p class="text-white-50">&copy; 2025 EquiZen. All rights reserved. Powered by MarketStack API</p>
+                </div>
+                <div class="col-md-6 text-end">
+                    <div class="social-links">
+                        <a href="#" class="text-white-50 me-3"><i class="fab fa-twitter"></i></a>
+                        <a href="#" class="text-white-50 me-3"><i class="fab fa-telegram"></i></a>
+                        <a href="#" class="text-white-50 me-3"><i class="fab fa-reddit"></i></a>
+                        <a href="#" class="text-white-50"><i class="fab fa-discord"></i></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+       // Configuration
+const CONFIG = {
+    FINNHUB_API_KEY: 'ct7l9v1r01qmfmnfkfj0ct7l9v1r01qmfmnfkfjg',
+    ALPHA_VANTAGE_API_KEY: 'demo',
+    BASE_URL: 'https://finnhub.io/api/v1/',
+    STOCKS: ['AAPL', 'GOOGL', 'MSFT', 'AMZN', 'TSLA', 'META', 'NVDA', 'NFLX'],
+    CRYPTO: ['BTCUSD', 'ETHUSD', 'ADAUSD', 'SOLUSD'],
+    REFRESH_INTERVAL: 60000, // 1 minute
+};
+
+// Global state
+let currentCategory = 'stocks';
+let refreshInterval = null;
+let lastUpdateTime = null;
+let marketDataCache = {};
+
+// DOM elements
+const elements = {
+    apiStatus: document.getElementById('apiStatus'),
+    marketData: document.getElementById('marketData'),
+    watchlistData: document.getElementById('watchlistData'),
+    newsData: document.getElementById('newsData'),
+    volumeData: document.getElementById('volumeData'),
+    lastUpdate: document.getElementById('lastUpdate'),
+    refreshBtn: document.getElementById('refreshBtn'),
+    searchInput: document.getElementById('searchInput')
+};
+
+// Utility functions
+function formatCurrency(value, decimals = 2) {
+    return new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'USD',
+        minimumFractionDigits: decimals,
+        maximumFractionDigits: decimals
+    }).format(value);
+}
+
+function formatNumber(num) {
+    if (num >= 1e9) return (num / 1e9).toFixed(1) + 'B';
+    if (num >= 1e6) return (num / 1e6).toFixed(1) + 'M';
+    if (num >= 1e3) return (num / 1e3).toFixed(1) + 'K';
+    return num.toString();
+}
+
+function formatPercentage(value) {
+    const sign = value >= 0 ? '+' : '';
+    return `${sign}${value.toFixed(2)}%`;
+}
+
+function updateApiStatus(status, className) {
+    elements.apiStatus.innerHTML = `
+        ${className === 'loading' ? '<div class="loading-spinner"></div>' : ''}
+        ${status}
+    `;
+    elements.apiStatus.className = `api-status ${className}`;
+}
+
+function updateLastUpdate() {
+    const now = new Date();
+    elements.lastUpdate.textContent = now.toLocaleTimeString();
+    lastUpdateTime = now;
+}
+
+// API functions
+async function fetchStockData() {
+    try {
+        const symbols = CONFIG.STOCKS;
+        const promises = symbols.map(symbol => 
+            fetch(`${CONFIG.BASE_URL}quote?symbol=${symbol}&token=${CONFIG.FINNHUB_API_KEY}`)
+                .then(res => res.json())
+                .then(data => ({ symbol, ...data }))
+                .catch(err => ({ symbol, error: err.message }))
+        );
+
+        const results = await Promise.all(promises);
+        return results.filter(item => !item.error && item.c > 0);
+    } catch (error) {
+        console.error('Error fetching stock data:', error);
+        // Return mock data as fallback
+        return generateMockStockData();
+    }
+}
+
+async function fetchCryptoData() {
+    try {
+        const response = await fetch('https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=8&page=1');
+        const data = await response.json();
+        
+        return data.map(coin => ({
+            symbol: coin.symbol.toUpperCase(),
+            name: coin.name,
+            c: coin.current_price,
+            d: coin.price_change_24h,
+            dp: coin.price_change_percentage_24h,
+            h: coin.high_24h,
+            l: coin.low_24h,
+            o: coin.current_price - coin.price_change_24h
+        }));
+    } catch (error) {
+        console.error('Error fetching crypto data:', error);
+        return generateMockCryptoData();
+    }
+}
+
+async function fetchForexData() {
+    // Mock forex data since free APIs are limited
+    const pairs = ['EURUSD', 'GBPUSD', 'USDJPY', 'AUDUSD', 'USDCAD', 'USDCHF'];
+    return pairs.map(pair => ({
+        symbol: pair,
+        name: pair,
+        c: 1 + (Math.random() * 0.5),
+        d: (Math.random() - 0.5) * 0.01,
+        dp: (Math.random() - 0.5) * 2,
+        h: 1.1 + Math.random() * 0.1,
+        l: 0.9 + Math.random() * 0.1,
+        o: 1 + (Math.random() * 0.4)
+    }));
+}
+
+async function fetchIndicesData() {
+    const indices = [
+        { symbol: 'SPX', name: 'S&P 500' },
+        { symbol: 'NDX', name: 'NASDAQ 100' },
+        { symbol: 'DJI', name: 'Dow Jones' },
+        { symbol: 'RUT', name: 'Russell 2000' },
+        { symbol: 'VIX', name: 'Volatility Index' },
+        { symbol: 'TNX', name: '10-Year Treasury' }
+    ];
+
+    return indices.map(index => ({
+        symbol: index.symbol,
+        name: index.name,
+        c: Math.random() * 5000 + 1000,
+        d: (Math.random() - 0.5) * 100,
+        dp: (Math.random() - 0.5) * 5,
+        h: Math.random() * 5500 + 1000,
+        l: Math.random() * 4500 + 500,
+        o: Math.random() * 5000 + 900
+    }));
+}
+
+async function fetchMarketNews() {
+    try {
+        const response = await fetch(`${CONFIG.BASE_URL}news?category=general&token=${CONFIG.FINNHUB_API_KEY}`);
+        const data = await response.json();
+        return data.slice(0, 5);
+    } catch (error) {
+        console.error('Error fetching news:', error);
+        return generateMockNews();
+    }
+}
+
+// Mock data generators
+function generateMockStockData() {
+    return CONFIG.STOCKS.map(symbol => ({
+        symbol,
+        name: getStockName(symbol),
+        c: Math.random() * 300 + 50,
+        d: (Math.random() - 0.5) * 20,
+        dp: (Math.random() - 0.5) * 10,
+        h: Math.random() * 350 + 50,
+        l: Math.random() * 250 + 30,
+        o: Math.random() * 290 + 45
+    }));
+}
+
+function generateMockCryptoData() {
+    const cryptos = [
+        { symbol: 'BTC', name: 'Bitcoin' },
+        { symbol: 'ETH', name: 'Ethereum' },
+        { symbol: 'ADA', name: 'Cardano' },
+        { symbol: 'SOL', name: 'Solana' },
+        { symbol: 'MATIC', name: 'Polygon' },
+        { symbol: 'DOT', name: 'Polkadot' },
+        { symbol: 'AVAX', name: 'Avalanche' },
+        { symbol: 'LINK', name: 'Chainlink' }
+    ];
+
+    return cryptos.map(crypto => ({
+        symbol: crypto.symbol,
+        name: crypto.name,
+        c: Math.random() * 50000 + 100,
+        d: (Math.random() - 0.5) * 5000,
+        dp: (Math.random() - 0.5) * 15,
+        h: Math.random() * 55000 + 100,
+        l: Math.random() * 45000 + 50,
+        o: Math.random() * 48000 + 80
+    }));
+}
+
+function generateMockNews() {
+    return [
+        {
+            headline: 'Tech Stocks Rally on Strong Earnings Reports',
+            datetime: Date.now() / 1000 - 3600,
+            source: 'Market Watch'
+        },
+        {
+            headline: 'Federal Reserve Signals Cautious Approach to Interest Rates',
+            datetime: Date.now() / 1000 - 7200,
+            source: 'Financial Times'
+        },
+        {
+            headline: 'Cryptocurrency Market Shows Mixed Signals Amid Regulation News',
+            datetime: Date.now() / 1000 - 10800,
+            source: 'CoinDesk'
+        },
+        {
+            headline: 'Oil Prices Surge on Supply Chain Concerns',
+            datetime: Date.now() / 1000 - 14400,
+            source: 'Reuters'
+        },
+        {
+            headline: 'Asian Markets Open Higher Following Wall Street Gains',
+            datetime: Date.now() / 1000 - 18000,
+            source: 'Bloomberg'
+        }
+    ];
+}
+
+function getStockName(symbol) {
+    const names = {
+        'AAPL': 'Apple Inc.',
+        'GOOGL': 'Alphabet Inc.',
+        'MSFT': 'Microsoft Corp.',
+        'AMZN': 'Amazon.com Inc.',
+        'TSLA': 'Tesla Inc.',
+        'META': 'Meta Platforms Inc.',
+        'NVDA': 'NVIDIA Corp.',
+        'NFLX': 'Netflix Inc.'
+    };
+    return names[symbol] || symbol;
+}
+
+// Display functions
+function displayMarketData(data) {
+    if (!data || data.length === 0) {
+        elements.marketData.innerHTML = `
+            <div class="error-message">
+                <i class="fas fa-exclamation-triangle"></i>
+                No data available for ${currentCategory}
+            </div>
+        `;
+        return;
+    }
+
+    const html = data.map(item => {
+        const change = item.d || 0;
+        const changePercent = item.dp || 0;
+        const isPositive = change >= 0;
+        
+        return `
+            <div class="index-card">
+                <div class="index-header">
+                    <div>
+                        <div class="index-name">${item.name || item.symbol}</div>
+                        <div class="index-symbol">${item.symbol}</div>
+                    </div>
+                    <i class="fas fa-star" style="color: var(--text-light); opacity: 0.5; cursor: pointer;" onclick="toggleWatchlist('${item.symbol}')"></i>
+                </div>
+                <div class="index-value">${formatCurrency(item.c)}</div>
+                <div class="index-change ${isPositive ? 'positive' : 'negative'}">
+                    <i class="fas fa-arrow-${isPositive ? 'up' : 'down'}"></i>
+                    ${formatCurrency(Math.abs(change))} (${formatPercentage(changePercent)})
+                </div>
+            </div>
+        `;
+    }).join('');
+
+    elements.marketData.innerHTML = html;
+}
+
+function displayWatchlist(data) {
+    if (!data || data.length === 0) {
+        elements.watchlistData.innerHTML = '<div class="error-message">No watchlist data available</div>';
+        return;
+    }
+
+    const html = data.slice(0, 6).map(item => {
+        const change = item.d || 0;
+        const changePercent = item.dp || 0;
+        const isPositive = change >= 0;
+        
+        return `
+            <div class="stock-item">
+                <div class="stock-info">
+                    <div class="stock-icon">${item.symbol.substring(0, 2)}</div>
+                    <div>
+                        <div class="stock-symbol">${item.symbol}</div>
+                        <div class="stock-name">${item.name || item.symbol}</div>
+                    </div>
+                </div>
+                <div class="stock-price">
+                    <div class="price">${formatCurrency(item.c)}</div>
+                    <div class="change ${isPositive ? 'positive' : 'negative'}">
+                        ${formatPercentage(changePercent)}
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
+
+    elements.watchlistData.innerHTML = html;
+}
+
+function displayNews(news) {
+    if (!news || news.length === 0) {
+        elements.newsData.innerHTML = '<div class="error-message">No news available</div>';
+        return;
+    }
+
+    const html = news.map(item => {
+        const timeAgo = Math.floor((Date.now() / 1000 - item.datetime) / 3600);
+        return `
+            <div class="news-item">
+                <div class="news-icon">
+                    <i class="fas fa-newspaper"></i>
+                </div>
+                <div class="news-content">
+                    <div class="news-title">${item.headline}</div>
+                    <div class="news-time">${timeAgo}h ago • ${item.source}</div>
+                </div>
+            </div>
+        `;
+    }).join('');
+
+    elements.newsData.innerHTML = html;
+}
+
+function displayVolume(data) {
+    if (!data || data.length === 0) {
+        elements.volumeData.innerHTML = '<div class="error-message">No volume data available</div>';
+        return;
+    }
+
+    const sortedData = [...data].sort((a, b) => Math.abs(b.dp || 0) - Math.abs(a.dp || 0));
+    const maxVolume = Math.max(...sortedData.map(item => Math.abs(item.dp || 0)));
+    
+    const html = sortedData.slice(0, 5).map(item => {
+        const volumePercent = Math.abs(item.dp || 0) / maxVolume * 100;
+        const isPositive = (item.dp || 0) >= 0;
+        
+        return `
+            <div class="volume-item">
+                <div>
+                    <div class="stock-symbol">${item.symbol}</div>
+                    <div class="stock-name">${item.name || item.symbol}</div>
+                </div>
+                <div>
+                    <div class="volume-bar">
+                        <div class="volume-fill" style="width: ${volumePercent}%; background: ${isPositive ? 'var(--green-color)' : 'var(--red-color)'}"></div>
+                    </div>
+                    <div style="font-size: 0.8rem; color: var(--text-light); margin-top: 0.25rem;">
+                        ${formatPercentage(item.dp || 0)}
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
+
+    elements.volumeData.innerHTML = html;
+}
+
+// Main data loading function
+async function loadMarketData() {
+    try {
+        updateApiStatus('Loading...', 'loading');
+        
+        let data;
+        switch (currentCategory) {
+            case 'stocks':
+                data = await fetchStockData();
+                break;
+            case 'crypto':
+                data = await fetchCryptoData();
+                break;
+            case 'forex':
+                data = await fetchForexData();
+                break;
+            case 'indices':
+                data = await fetchIndicesData();
+                break;
+            default:
+                data = await fetchStockData();
+        }
+
+        marketDataCache[currentCategory] = data;
+        displayMarketData(data);
+        displayWatchlist(data);
+        displayVolume(data);
+        
+        updateApiStatus('Connected', 'connected');
+        updateLastUpdate();
+        
+    } catch (error) {
+        console.error('Error loading market data:', error);
+        updateApiStatus('Connection Error', 'error');
+        
+        // Show error message
+        elements.marketData.innerHTML = `
+            <div class="error-message">
+                <i class="fas fa-exclamation-triangle"></i>
+                Failed to load market data. Please try again.
+            </div>
+        `;
+    }
+}
+
+async function loadNews() {
+    try {
+        const news = await fetchMarketNews();
+        displayNews(news);
+    } catch (error) {
+        console.error('Error loading news:', error);
+        displayNews(generateMockNews());
+    }
+}
+
+// Event handlers
+function refreshData() {
+    elements.refreshBtn.classList.add('spinning');
+    loadMarketData().finally(() => {
+        elements.refreshBtn.classList.remove('spinning');
+    });
+}
+
+function toggleWatchlist(symbol) {
+    // This would typically save to localStorage or a backend
+    console.log(`Toggling watchlist for ${symbol}`);
+    // Visual feedback
+    event.target.style.color = event.target.style.color === 'var(--primary-color)' ? 'var(--text-light)' : 'var(--primary-color)';
+}
+
+function handleSearch() {
+    const query = elements.searchInput.value.toLowerCase();
+    if (query.length < 2) return;
+    
+    // Filter current data based on search
+    const currentData = marketDataCache[currentCategory] || [];
+    const filtered = currentData.filter(item => 
+        item.symbol.toLowerCase().includes(query) || 
+        (item.name && item.name.toLowerCase().includes(query))
+    );
+    
+    displayMarketData(filtered);
+}
+
+// Tab switching
+function switchCategory(category) {
+    currentCategory = category;
+    
+    // Update tab UI
+    document.querySelectorAll('.tab').forEach(tab => {
+        tab.classList.remove('active');
+    });
+    document.querySelector(`[data-category="${category}"]`).classList.add('active');
+    
+    // Load data for new category
+    if (marketDataCache[category]) {
+        displayMarketData(marketDataCache[category]);
+        displayWatchlist(marketDataCache[category]);
+        displayVolume(marketDataCache[category]);
+    } else {
+        loadMarketData();
+    }
+}
+
+// Initialize the application
+function init() {
+    // Set up event listeners
+    document.querySelectorAll('.tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+            const category = tab.getAttribute('data-category');
+            switchCategory(category);
+        });
+    });
+
+    elements.searchInput.addEventListener('input', handleSearch);
+    elements.searchInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            handleSearch();
+        }
+    });
+
+    // Load initial data
+    loadMarketData();
+    loadNews();
+    
+    // Set up auto-refresh
+    refreshInterval = setInterval(() => {
+        loadMarketData();
+        loadNews();
+    }, CONFIG.REFRESH_INTERVAL);
+}
+
+// Start the application when DOM is loaded
+document.addEventListener('DOMContentLoaded', init);
+
+// Cleanup on page unload
+window.addEventListener('beforeunload', () => {
+    if (refreshInterval) {
+        clearInterval(refreshInterval);
+    }
+});
+</script>
+<script src="script.js"></script>
+</body>
+</html>
